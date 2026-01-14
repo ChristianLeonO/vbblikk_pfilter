@@ -1,0 +1,394 @@
+/* ----------------------------------------------------
+   Font
+---------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap');
+
+/* ----------------------------------------------------
+   Skallet (fra "nye css.css")
+---------------------------------------------------- */
+.Frame79 {
+  width: 264px;
+  padding: 22px 26px;
+  background: linear-gradient(0deg, rgba(110,130,208,0.05), rgba(110,130,208,0.05)), #fff;
+  border-radius: 36px;
+  display: inline-flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+}
+.Frame45 {
+  padding: 16px 1px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+}
+.Frame46 {
+  width: 209px;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 26px;
+}
+.Frame35 {
+  width: 209px;
+  height: 40px;
+  padding: 10px 29px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+}
+.KategorierTitle {
+  width: 145px;
+  font: 700 18px "DM Sans", sans-serif;
+  color: #111827;
+}
+.Vector svg { display: block; }
+
+.Pris {
+  width: 209px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.Pris .filter-content{
+  padding-top: 20px;
+}
+.Frame30 { width: 204px; height: 117px; position: relative; }
+.PrisLabel { position: absolute; top: 0; left: 0; font: 400 16px "DM Sans", sans-serif; }
+.Line3 { position: absolute; top: 34px; left: 10px; width: 178px; height: 2px; background: #111827; }
+.PrisText { position: absolute; top: 54px; left: 0; font: 400 16px "DM Sans", sans-serif; }
+.FiltrerPris {
+  position: absolute; top: 84px; left: -1px;
+  padding: 6px 7px; border: 1px solid #979797; border-radius: 4px;
+  background: #fff; font: 400 14px "DM Sans", sans-serif; cursor: pointer;
+}
+
+/* ----------------------------------------------------
+   Collapsibles
+---------------------------------------------------- */
+.collapsible .filter-content { display: none; }
+.collapsible.is-open .filter-content { display: block; }
+
+/* Pil-rotasjon i seksjonsheader */
+.collapsible .Vector svg { transition: transform .3s ease; transform-origin: center; }
+.collapsible.is-open .Vector svg { transform: scaleY(-1); }
+
+/* Klikkbar header */
+.filter-header { cursor: pointer; }
+
+/* ----------------------------------------------------
+   Lister & reset
+---------------------------------------------------- */
+.bdpf-category-list,
+.bdpf-subcategory-list,
+.bdpf-attr-list,
+.bdpf-category-list ul.bdpf-subcategory-list,
+.bdpf-cat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.bdpf-category-list { margin-top: 8px; }
+.bdpf-cat-item { margin: 6px 0; }
+.bdpf-category-list li { list-style-type: none; }
+.no-bullets { list-style: none; }
+.bdpf-empty { opacity: .7; font-style: italic; }
+
+/* ----------------------------------------------------
+   Foreldre-knapp (sub-collapsible) + caret
+   (Vi bruker .bdpf-caret med SVG, ikke den gamle .caret-trekanten)
+---------------------------------------------------- */
+.sub-collapsible{
+  appearance: none;
+  border: 0;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  padding: 6px 0 6px 22px;
+  display: flex; align-items: center; gap: 8px;
+  font: 500 15px "DM Sans", sans-serif;
+  color: #111827;
+  cursor: pointer;
+  position: relative;
+}
+.bdpf-caret svg { display: block; transition: transform .18s ease; }
+.bdpf-cat-item.is-open .bdpf-caret svg { transform: rotate(90deg); }
+
+/* Barneliste skjult som default */
+.bdpf-subcategory-list { display: none; margin-left: 18px; }
+.bdpf-cat-item.is-open > .bdpf-subcategory-list { display: block; }
+
+/* ----------------------------------------------------
+   Typografi for etiketter
+---------------------------------------------------- */
+.Frame79 .bdpf-cat-label{
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px; line-height: 24px; font-weight: 400; color: #000;
+  display: flex; flex-direction: column; justify-content: center;
+  word-wrap: break-word; overflow-wrap: anywhere;
+}
+.Frame79 .category-checkbox .txt{
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px; line-height: 24px; font-weight: 400; color: #000;
+  display: flex; flex-direction: column; justify-content: center;
+  word-wrap: break-word; overflow-wrap: anywhere;
+}
+
+/* ----------------------------------------------------
+   Attributter (Materiale/Varemerke/…) – button-variant
+---------------------------------------------------- */
+.category-checkbox.bdpf-term {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 0; background: transparent; padding: 2px 0; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 26px; color: #111827;
+}
+.category-checkbox.bdpf-term .box {
+  width: 16px; height: 16px; border: 1px solid #979797; border-radius: 3px; background: #fff; flex: 0 0 16px;
+}
+.category-checkbox.bdpf-term.is-checked .box { background: #6E82D0; border-color: #6E82D0; }
+.category-checkbox.bdpf-term.is-checked .box::after {
+  content: ""; display: block; width: 8px; height: 8px; margin: 4px; background: #fff; border-radius: 2px;
+}
+
+/* ----------------------------------------------------
+   Underkategorier – ekte input + falsk ikon (fake-box)
+---------------------------------------------------- */
+.bdpf-subcat-item .category-checkbox{
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 26px; color: #111827;
+}
+
+/* Skjul ekte input helt, men behold funksjon via label */
+.bdpf-subcat-item .category-checkbox input[type="checkbox"]{
+  position: absolute;
+  width: 1px; height: 1px; margin: -1px; padding: 0; border: 0;
+  clip: rect(0 0 0 0); clip-path: inset(50%); overflow: hidden; white-space: nowrap;
+  opacity: 0; pointer-events: none;
+}
+
+/* Falsk boks-innpakning */
+.bdpf-subcat-item .category-checkbox .fake-box{
+  display: inline-flex; width: 16px; height: 16px; align-items: center; justify-content: center;
+}
+.category-checkbox .fake-box .svg { line-height: 0; }
+
+/* Skjul “checked”-ikonet som default */
+.bdpf-subcat-item .fake-box .svg--checked { display: none; }
+
+/* Ekte input: når checked, bytt ikon */
+.bdpf-subcat-item input[type="checkbox"]:checked + .fake-box .svg--unchecked { display: none; }
+.bdpf-subcat-item input[type="checkbox"]:checked + .fake-box .svg--checked   { display: inline-block; }
+
+/* Button-variant (hvis du noen gang bruker fake-box der også) */
+.category-checkbox.is-checked .fake-box .svg--unchecked { display: none; }
+.category-checkbox.is-checked .fake-box .svg--checked   { display: inline-block; }
+
+/* Tastaturfokus på ekte input → fokusring på fake-box */
+.bdpf-subcat-item .category-checkbox input[type="checkbox"]:focus-visible + .fake-box{
+  outline: 2px solid #6E82D0;
+  outline-offset: 2px;
+}
+
+/* Dummy-unders: klikkbar for visuell testing (ingen AJAX) */
+.bdpf-subcat-item.is-dummy .category-checkbox{
+  cursor: pointer;
+  opacity: .8;
+}
+
+/* ----------------------------------------------------
+   Diverse småting
+---------------------------------------------------- */
+.bdpf-cat-row { cursor: pointer; }
+
+/* ----------------------------------------------------
+  Temp overrides / Alignments
+---------------------------------------------------- */
+.Frame79{
+  --caret-w:   8px;   /* pilbredde i .bdpf-caret */
+  --caret-gap: 8px;   /* gap mellom caret og parent-tekst */
+  --fakebox-w: 16px;  /* bredde på falsk sjekkboks */
+  --hdr-left: 29px;   /* = .Frame35 padding-left */
+  --sub-gap:  8px;    /* gap mellom fake-box og underkategori-tekst */
+}
+
+/* Parent-knappen starter på samme linje som header-tekst */
+.bdpf-cat-item > .sub-collapsible{
+  margin-left: var(--hdr-left);
+  padding-left: 0 !important;
+  display: flex; align-items: center; column-gap: var(--caret-gap);
+}
+.bdpf-caret{
+  flex: 0 0 var(--caret-w);
+  width: var(--caret-w);
+  display: flex; justify-content: center;
+}
+
+/* Barnelista posisjoneres slik at høyre kant av fake-box = venstrekant av parent-tekst */
+.bdpf-subcategory-list{
+  margin-left: calc(var(--hdr-left) + var(--caret-w) + var(--caret-gap) - var(--fakebox-w)) !important;
+}
+.bdpf-subcat-item .category-checkbox{ column-gap: var(--sub-gap); }
+
+/* ----------------------------------------------------
+   Pris slider (to tomler) – 100% overlapp på .Line3
+---------------------------------------------------- */
+.Frame30 { position: relative; }  /* sikkerhet */
+
+/* .Line3 ligger allerede her: top:34px; left:10px; width:178px; height:2px */
+.Line3 {
+  position: absolute;
+  top: 34px;
+  left: 10px;
+  width: 178px;
+  height: 2px;
+  background: #111827;
+  z-index: 0;
+}
+
+/* Posisjonér slider-container nøyaktig oppå .Line3 */
+.bdpf-price-slider {
+  position: absolute;
+  top: 20px;     /* samme som .Line3 */
+  left: 10px;    /* samme som .Line3 */
+  width: 178px;  /* samme som .Line3 */
+  height: 16px;  /* bare for “klikk-område” rundt tomlene */
+  z-index: 2;    /* over .Line3 */
+}
+
+/* Fyll-strek: eksakt samme høyde/posisjon som .Line3 */
+.bdpf-price-slider .bdpf-range-fill {
+  position: absolute;
+  left: 0;
+  top: 0;              /* øverst i containeren */
+  width: 100%;
+  height: 2px;         /* identisk med .Line3 */
+  background: #111827; /* bruk samme farge for perfekt overlapp */
+  border-radius: 2px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* De to overlappende <input type="range"> */
+.bdpf-price-slider .bdpf-range {
+  appearance: none;
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;                 /* legg inputens “spor-midtlinje” på barens senter */
+  transform: translateY(-50%);
+  height: 0;                /* effektivt nullhøyde spor – kun tomler synes */
+  margin: 0;
+  background: transparent;
+  border: 0; outline: 0;
+  z-index: 3;
+  pointer-events: none;     /* kun tomlene skal ta events */
+}
+
+/* Skjul native track (kun nødvendig, ingen vendor-hacks utover dette) */
+.bdpf-price-slider .bdpf-range::-webkit-slider-runnable-track { height: 0; background: transparent; border: 0; }
+.bdpf-price-slider .bdpf-range::-moz-range-track               { height: 0; background: transparent; border: 0; }
+
+/* Tomlene: 16x16 sorte sirkler, sentrum akkurat på linja */
+.bdpf-price-slider .bdpf-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #111827; border: 0;
+  cursor: pointer;
+  pointer-events: all;  /* tomlene kan dras/klikkes */
+  position: relative; z-index: 4;
+}
+.bdpf-price-slider .bdpf-range::-moz-range-thumb {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #111827; border: 0;
+  cursor: pointer;
+  pointer-events: all;
+  position: relative; z-index: 4;
+}
+
+/* Z-rekkefølge når tomlene overlapper */
+.bdpf-price-slider .bdpf-range--min { z-index: 5; }
+.bdpf-price-slider .bdpf-range--max { z-index: 4; }
+
+.bdpf-price-slider .bdpf-range-fill {
+  display: none !important;    /* skjuler den mørke fylte stripen */
+}
+
+.bdpf-price-slider .bdpf-range {
+  height: 16px;                /* tomlene trenger høyde å leve i */
+  background: transparent;     /* ingen bakgrunn på inputen */
+  pointer-events: auto;        /* tomlene kan fortsatt dras */
+}
+
+/* Skjul native track helt (ingen “strek” fra inputen) */
+.bdpf-price-slider .bdpf-range::-webkit-slider-runnable-track { 
+  height: 0; background: transparent; border: 0; 
+}
+.bdpf-price-slider .bdpf-range::-moz-range-track { 
+  height: 0; background: transparent; border: 0; 
+}
+
+/* Forelder uten barn – klikkbar rad */
+.bdpf-parent-leaf{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  padding: 6px 29px; /* matcher header-innrykk */
+  cursor: pointer;
+  font: 500 15px "DM Sans", sans-serif;
+  color: #111827;
+}
+
+/* Når valgt: øk weight på teksten */
+.bdpf-parent-leaf.is-checked .bdpf-parent-leaf-label{
+  font-weight: 700;
+}
+
+/* Sørg for at leaf-rader ligger visuelt riktig (som andre) */
+.bdpf-cat-item.is-leaf{
+  margin: 6px 0;
+}
+
+/* Oppførsel for tastaturfokus på leaf-knapper */
+.bdpf-parent-leaf:focus-visible{
+  outline: 2px solid #6E82D0;
+  outline-offset: 2px;
+}
+
+/* Juster kun attributtlistene (Materiale + Varemerke) */
+.Frame82 .bdpf-attr-list,
+.Frame83 .bdpf-attr-list {
+  margin-left: var(--hdr-left) !important; /* matcher header-tekst-start */
+}
+
+/* Null ekstra innrykk på selve radene */
+.Frame82 .bdpf-attr-list .bdpf-subcat-item .category-checkbox,
+.Frame83 .bdpf-attr-list .bdpf-subcat-item .category-checkbox {
+  padding-left: 0 !important;
+}
+
+/* Samme venstreinnrykk for Farge- og Lengde-attributtlistene */
+.Farge .bdpf-attr-list,
+.Lengde .bdpf-attr-list {
+  margin-left: var(--hdr-left) !important;
+}
+.Farge .bdpf-attr-list .bdpf-subcat-item .category-checkbox,
+.Lengde .bdpf-attr-list .bdpf-subcat-item .category-checkbox {
+  padding-left: 0 !important;
+}
+.BDPFReset{
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #979797;
+  border-radius: 8px;
+  background: #fff;
+  font: 500 14px "DM Sans", sans-serif;
+  color: #111827;
+  cursor: pointer;
+}
+.BDPFReset:hover{ background: #f6f7fb; }
+/* hvis nødvendig */
+.bde-woo-categories-list { opacity: 1 !important; visibility: visible !important; }
