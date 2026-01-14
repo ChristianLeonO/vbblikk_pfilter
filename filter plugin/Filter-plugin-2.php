@@ -67,7 +67,47 @@ function bdpf_filter_products() {
     $max   = isset($_POST['max_price']) && $_POST['max_price'] !== '' ? (float) $_POST['max_price'] : null;
     $orderby = isset($_POST['orderby']) ? sanitize_text_field(wp_unslash($_POST['orderby'])) : '';
 
-    $filter = function ($args) use ($cats, $attrs, $min, $max, $paged, $orderby) {
+    // Pris-sort i Woo bruker wc_product_meta_lookup (min_price/max_price). Når sortering gjøres client-side
+    // (DOM), blir rekkefølgen riktig per side men feil på tvers av sider. Vi må derfor sortere i SQL
+    // slik at paginering får riktig produkt-utvalg.
+    $normalizedOrderby = strtolower(trim((string) $orderby));
+    $priceSort = null;
+    if ($normalizedOrderby === 'price-desc') {
+        $priceSort = 'desc';
+    } elseif ($normalizedOrderby === 'price') {
+        $priceSort = 'asc';
+    }
+
+    $priceClausesFilter = null;
+    if ($priceSort !== null) {
+        $priceClausesFilter = static function (array $clauses, \WP_Query $query) use ($priceSort) {
+            if ($query->get('bdpf_price_sort') !== $priceSort) {
+                return $clauses;
+            }
+
+            global $wpdb;
+            if (!isset($wpdb->wc_product_meta_lookup) || !$wpdb->wc_product_meta_lookup) {
+                return $clauses;
+            }
+
+            $join = (string) ($clauses['join'] ?? '');
+            if (stripos($join, 'wc_product_meta_lookup') === false) {
+                $join .= " LEFT JOIN {$wpdb->wc_product_meta_lookup} wc_product_meta_lookup ON {$wpdb->posts}.ID = wc_product_meta_lookup.product_id ";
+                $clauses['join'] = $join;
+            }
+
+            if ($priceSort === 'desc') {
+                $clauses['orderby'] = ' wc_product_meta_lookup.max_price DESC, wc_product_meta_lookup.product_id DESC ';
+            } else {
+                $clauses['orderby'] = ' wc_product_meta_lookup.min_price ASC, wc_product_meta_lookup.product_id ASC ';
+            }
+
+            return $clauses;
+        };
+        add_filter('posts_clauses', $priceClausesFilter, 10, 2);
+    }
+
+    $filter = function ($args) use ($cats, $attrs, $min, $max, $paged, $orderby, $priceSort) {
         $args['paged'] = $paged;
 
         // Viktig: Hold samme sortering som katalogen (og gjør den deterministisk) for at paginering
@@ -84,6 +124,10 @@ function bdpf_filter_products() {
         } elseif ($requestedOrderby === 'title-desc') {
             $args['orderby'] = 'title';
             $args['order'] = 'DESC';
+        } elseif ($requestedOrderby === 'price' && $priceSort === 'asc') {
+            $args['bdpf_price_sort'] = 'asc';
+        } elseif ($requestedOrderby === 'price-desc' && $priceSort === 'desc') {
+            $args['bdpf_price_sort'] = 'desc';
         } elseif ($requestedOrderby === 'sku') {
             $args['meta_key'] = '_sku';
             $args['orderby'] = 'meta_value title';
@@ -155,7 +199,7 @@ function bdpf_filter_products() {
     $elements = $props['design']['products_list']['elements'] ?? [];
 
     WooActions::filterCatalog($elements)
-        ->then(function () use ($props, $paged, $filter) {
+        ->then(function () use ($props, $paged, $filter, $priceClausesFilter) {
             try {
                 $queryArgs = $props['content']['content'] ?? [];
 
@@ -173,6 +217,9 @@ function bdpf_filter_products() {
                 $markup = bdpf_render_catalog_markup($query, $paged);
 
                 remove_filter('breakdance_woocommerce_get_products_query', $filter);
+                if ($priceClausesFilter !== null) {
+                    remove_filter('posts_clauses', $priceClausesFilter, 10);
+                }
 
                 wp_send_json_success([
                     'markup'      => $markup,
@@ -183,6 +230,9 @@ function bdpf_filter_products() {
                 ]);
             } catch (\Throwable $t) {
                 remove_filter('breakdance_woocommerce_get_products_query', $filter);
+                if ($priceClausesFilter !== null) {
+                    remove_filter('posts_clauses', $priceClausesFilter, 10);
+                }
 
                 wp_send_json_error([
                     'message' => $t->getMessage(),

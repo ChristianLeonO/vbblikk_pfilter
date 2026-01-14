@@ -81,14 +81,19 @@
       // Woo sin <select.orderby> kan bli re-renderet med default-verdi etter AJAX og ellers "overstyre"
       // valgt sort på side 2+ hvis vi leser select først.
       var hasCustomSortUi = !!document.querySelector('.frame37');
+      var lsOrderby = orderbyFromLocalStorage();
       if (hasCustomSortUi) {
-        return orderbyFromLocalStorage();
+        return lsOrderby;
       }
+
+      // Når custom UI er borte/ikke i DOM (eller vi er på en annen mal),
+      // behold likevel aktivt valg fra localStorage hvis det er satt (ikke default).
+      if (lsOrderby) return lsOrderby;
 
       var sel=document.querySelector('#bdpf-loop select.orderby');
       if (sel && typeof sel.value === 'string') return sel.value;
 
-      return orderbyFromLocalStorage();
+      return lsOrderby;
     }
 
 	    // --- Wrappere vi oppdaterer ofte ---
@@ -371,6 +376,9 @@
           if (container) {
             enhancePagination(container, BDPF.page.current, BDPF.page.max);
           }
+          try {
+            document.dispatchEvent(new CustomEvent('bdpf:products-updated', { detail: { page: BDPF.page.current, max_pages: BDPF.page.max } }));
+          } catch(e) {}
         })
         .catch(function(err){
           console.error('[BDPF products]', err);

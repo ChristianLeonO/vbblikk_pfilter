@@ -233,6 +233,17 @@
  setActive(value);
  localStorage.setItem(LS_KEY, value);
  applySort(value);
+ try {
+ const orderbyMap = {
+ 'default': '',
+ 'price-asc': 'price',
+ 'price-desc': 'price-desc',
+ 'name-asc': 'title',
+ 'name-desc': 'title-desc',
+ 'sku': 'sku'
+ };
+ document.dispatchEvent(new CustomEvent('bdpf:sort-changed', { detail: { orderby: orderbyMap[value] || '' } }));
+ } catch(e) {}
  closeMenu();
  });
 
@@ -333,6 +344,8 @@
  return (t ? t.textContent : li.textContent || '').trim();
  }
  function applySort(mode){
+ // Når katalogen lastes via BDPF/AJAX må sortering gjøres server-side, ellers blir paginering feil på tvers av sider.
+ if (document.querySelector('#bdpf-loop')) return;
  const root = PRODUCTS();
  if (!root) return;
 
@@ -372,14 +385,10 @@
  setActive(initial);
  applySort(initial);
 
- // Re-apply sort når produktlista oppdateres via AJAX
- const pr = PRODUCTS();
- if (pr){
- const mo = new MutationObserver(() => {
+ // Re-apply sort når produktlista oppdateres via BDPF/AJAX
+ document.addEventListener('bdpf:products-updated', () => {
  applySort(localStorage.getItem(LS_KEY) || 'default');
  });
- mo.observe(pr, {childList:true});
- }
 
  // Eksponer helper (frivillig)
  window.BD_SORT = {
