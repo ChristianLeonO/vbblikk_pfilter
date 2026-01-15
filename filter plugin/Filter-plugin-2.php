@@ -47,17 +47,11 @@ function bdpf_force_default_catalog_ordering_to_sku(array $args): array
         return $args;
     }
 
-    // Begrens til produktkatalog-kontekst (shop / produkt-taksonomier).
-    $isCatalog = function_exists('is_shop') && is_shop();
-    if (!$isCatalog && function_exists('is_product_taxonomy') && is_product_taxonomy()) {
-        $isCatalog = true;
-    }
-    if (!$isCatalog) {
-        return $args;
-    }
+    // NB: Vi begrenser ikke til `is_shop()` her, fordi Breakdance-katalogen kan rendres i en mal
+    // hvor Woo-conditionals ikke alltid treffer. Vi aktiverer kun når orderby er "default".
 
-    // Ikke overstyr hvis det allerede er satt en eksplisitt sortering.
-    if (!empty($args['meta_key']) || !empty($args['bdpf_price_sort'])) {
+    // Ikke overstyr hvis pris-sortering er aktiv (da styres dette av egen SQL-hook).
+    if (!empty($args['bdpf_price_sort'])) {
         return $args;
     }
 
@@ -68,14 +62,73 @@ function bdpf_force_default_catalog_ordering_to_sku(array $args): array
 
     $orderbyStr = strtolower(trim((string) $orderby));
     if ($orderbyStr === '' || $orderbyStr === 'menu_order' || $orderbyStr === 'menu_order title') {
+        // "Standard sortering" = SKU-suffiks (VAREXXXXX -> XXXXX), stigende.
+        $args['bdpf_sku_prefix'] = 'VARE';
+        $args['bdpf_sku_suffix_sort'] = 'asc';
+
+        // Fallback hvis posts_clauses-filter ikke slår inn.
         $args['meta_key'] = '_sku';
-        $args['orderby'] = 'meta_value title ID';
+        $args['orderby'] = 'meta_value';
         $args['order'] = 'ASC';
     }
 
     return $args;
 }
 add_filter('breakdance_woocommerce_get_products_query', 'bdpf_force_default_catalog_ordering_to_sku', 5);
+
+/**
+ * Sorter produkter på numerisk suffiks i SKU-formatet "VAREX" (X = 1–5 siffer).
+ * Tillater også separatorer: VARE-123 / VARE_123 / VARE 123.
+ * Aktiveres via query var `bdpf_sku_suffix_sort` (asc/desc).
+ */
+function bdpf_posts_clauses_sku_suffix_sort(array $clauses, \WP_Query $query): array
+{
+    $dir = strtolower((string) $query->get('bdpf_sku_suffix_sort'));
+    if ($dir !== 'asc' && $dir !== 'desc') {
+        return $clauses;
+    }
+
+    // Hvis pris-sortering er aktiv, lar vi den styre.
+    if ($query->get('bdpf_price_sort')) {
+        return $clauses;
+    }
+
+    global $wpdb;
+
+    $prefix = (string) $query->get('bdpf_sku_prefix');
+    $prefix = strtoupper(preg_replace('/[^A-Z0-9]/', '', $prefix));
+    if ($prefix === '') {
+        $prefix = 'VARE';
+    }
+
+    // 1-indeksert i SQL SUBSTRING. (Vi stripper separatorer etterpå.)
+    $startPos = strlen($prefix) + 1;
+
+    $pattern = '^' . $prefix . '[-_ ]*[0-9]{1,5}$';
+    $orderDir = strtoupper($dir) === 'DESC' ? 'DESC' : 'ASC';
+
+    $join = (string) ($clauses['join'] ?? '');
+    if (stripos($join, ' bdpf_sku_pm ') === false) {
+        $join .= " LEFT JOIN {$wpdb->postmeta} bdpf_sku_pm ON ({$wpdb->posts}.ID = bdpf_sku_pm.post_id AND bdpf_sku_pm.meta_key = '_sku') ";
+        $clauses['join'] = $join;
+    }
+
+    $caseSql = $wpdb->prepare(
+        "(CASE WHEN UPPER(TRIM(bdpf_sku_pm.meta_value)) REGEXP %s THEN 0 ELSE 1 END)",
+        $pattern
+    );
+
+    $tailSql = "SUBSTRING(TRIM(bdpf_sku_pm.meta_value), {$startPos})";
+    $digitsSql = "REPLACE(REPLACE(REPLACE({$tailSql}, '-', ''), '_', ''), ' ', '')";
+    $numSql = "CAST({$digitsSql} AS UNSIGNED)";
+
+    // Ikke-matchende/blanke SKUer sist, ellers numerisk på suffikset.
+    $clauses['orderby'] = " {$caseSql} ASC, {$numSql} {$orderDir}, {$wpdb->posts}.ID {$orderDir} ";
+
+    return $clauses;
+}
+// Kjør sent i filter-kjeden så vi vinner over andre orderby-filters.
+add_filter('posts_clauses', 'bdpf_posts_clauses_sku_suffix_sort', 99, 2);
 
 add_action('wp_ajax_bdpf_has_shop_element', 'bdpf_has_shop_element');
 add_action('wp_ajax_nopriv_bdpf_has_shop_element', 'bdpf_has_shop_element');
@@ -170,8 +223,13 @@ function bdpf_filter_products() {
         } elseif ($requestedOrderby === 'price-desc' && $priceSort === 'desc') {
             $args['bdpf_price_sort'] = 'desc';
         } elseif ($requestedOrderby === 'sku') {
+            // SKU-format: VAREXXXXX (suffiks = XXXXX). Sorter på suffiks (heltall).
+            $args['bdpf_sku_prefix'] = 'VARE';
+            $args['bdpf_sku_suffix_sort'] = 'asc';
+
+            // Fallback hvis posts_clauses-filter ikke slår inn.
             $args['meta_key'] = '_sku';
-            $args['orderby'] = 'meta_value title';
+            $args['orderby'] = 'meta_value';
             $args['order'] = 'ASC';
         } elseif (function_exists('woocommerce_get_catalog_ordering_args')) {
             $orderingArgs = woocommerce_get_catalog_ordering_args($requestedOrderby);
