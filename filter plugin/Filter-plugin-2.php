@@ -37,6 +37,46 @@ function bdpf_load_shop_properties_once() {
 // Kjør når Breakdance er lastet, så helperne finnes
 add_action('breakdance_loaded', 'bdpf_load_shop_properties_once');
 
+/**
+ * Standard sortering på katalogen skal være SKU (stigende) også ved vanlig page render
+ * (uten AJAX), slik at vi unngår "hopp" mellom server-render og BDPF/AJAX.
+ */
+function bdpf_force_default_catalog_ordering_to_sku(array $args): array
+{
+    if (wp_doing_ajax() || is_admin()) {
+        return $args;
+    }
+
+    // Begrens til produktkatalog-kontekst (shop / produkt-taksonomier).
+    $isCatalog = function_exists('is_shop') && is_shop();
+    if (!$isCatalog && function_exists('is_product_taxonomy') && is_product_taxonomy()) {
+        $isCatalog = true;
+    }
+    if (!$isCatalog) {
+        return $args;
+    }
+
+    // Ikke overstyr hvis det allerede er satt en eksplisitt sortering.
+    if (!empty($args['meta_key']) || !empty($args['bdpf_price_sort'])) {
+        return $args;
+    }
+
+    $orderby = $args['orderby'] ?? '';
+    if (is_array($orderby) && !empty($orderby)) {
+        return $args;
+    }
+
+    $orderbyStr = strtolower(trim((string) $orderby));
+    if ($orderbyStr === '' || $orderbyStr === 'menu_order' || $orderbyStr === 'menu_order title') {
+        $args['meta_key'] = '_sku';
+        $args['orderby'] = 'meta_value title ID';
+        $args['order'] = 'ASC';
+    }
+
+    return $args;
+}
+add_filter('breakdance_woocommerce_get_products_query', 'bdpf_force_default_catalog_ordering_to_sku', 5);
+
 add_action('wp_ajax_bdpf_has_shop_element', 'bdpf_has_shop_element');
 add_action('wp_ajax_nopriv_bdpf_has_shop_element', 'bdpf_has_shop_element');
 
@@ -113,8 +153,9 @@ function bdpf_filter_products() {
         // Viktig: Hold samme sortering som katalogen (og gjør den deterministisk) for at paginering
         // ikke skal "hoppe" produkter mellom sider.
         $requestedOrderby = strtolower(trim((string) $orderby));
-        if ($requestedOrderby === '' || $requestedOrderby === 'default') {
-            $requestedOrderby = 'menu_order';
+        if ($requestedOrderby === '' || $requestedOrderby === 'default' || $requestedOrderby === 'menu_order') {
+            // "Standard sortering" skal være SKU stigende.
+            $requestedOrderby = 'sku';
         }
 
         // Custom mapping fra frontend-integrasjoner.

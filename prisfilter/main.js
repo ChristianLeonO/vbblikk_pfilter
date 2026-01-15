@@ -409,15 +409,7 @@
       var container=document.querySelector(BDPF.targets.products);
       if(container){ enhancePagination(container, BDPF.page.current || 1, null); }
 
-      // Hvis custom sortering er aktiv (lagret i localStorage), hent side 1 fra server i samme rekkefølge
-      // slik at paginering blir konsistent på tvers av sider.
-      try {
-        var hasCustomSortUi = !!document.querySelector('.frame37');
-        var mode = hasCustomSortUi ? (localStorage.getItem('bd-sort') || 'default') : 'default';
-        if (hasCustomSortUi && mode && mode !== 'default') {
-          applyFilters(1);
-        }
-      } catch(e) {}
+      // Ikke kjør automatisk AJAX-load ved page load (unngår "hopp").
     })();
   }
 

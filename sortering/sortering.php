@@ -380,8 +380,9 @@
  if (!isOpen) openMenu(); else closeMenu();
  });
 
- // Init – hent tidligere valg, sett label og sorter
- const initial = localStorage.getItem(LS_KEY) || 'default';
+ // Init – ved full side-refresh skal vi alltid starte på "Standard sortering"
+ const initial = 'default';
+ try { localStorage.setItem(LS_KEY, initial); } catch(e) {}
  setActive(initial);
  applySort(initial);
 
